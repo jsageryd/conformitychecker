@@ -12,6 +12,9 @@ function findkanjiwithouttooltip($string){
 //	Get all kanji
 	preg_match_all("/([\x{4E00}-\x{9FC2}])/u", $string, $tk);
 
+//	Return empty string if there are no kanji
+	if(sizeof($tk[1]) == 0) { return ""; }
+
 //	Add all kanji to hash with counter
 	foreach($tk[1] as $k){ $totalkanji[$k] += 1; }
 
@@ -19,14 +22,19 @@ function findkanjiwithouttooltip($string){
 	preg_match_all("/\\\\tt\[(.*[\x{4E00}-\x{9FC2}].*)\]/uU", $string, $ttw); // first get all words inside tooltips
 	preg_match_all("/([\x{4E00}-\x{9FC2}])/u", join($ttw[1]), $ttk); // then get all kanji in those words
 
-//	Add all tooltip kanji to hash with counter
-	foreach($ttk[1] as $k){ $tooltipkanji[$k] += 1; }
-
+//	If there are any kanji in tooltips
+	if(sizeof($ttk[1]) > 0) {
+//		Add all tooltip kanji to hash with counter
+		foreach($ttk[1] as $k){ $tooltipkanji[$k] += 1; }
+	}
 //	Compare the counts and make a hash of kanji with no tooltip
 	foreach($totalkanji as $k => $v){
 		$count = $v - $tooltipkanji[$k];
 		if($count > 0) $notooltip[$k] = $count;
 	}
+
+//	Return empty string if all kanji are in tooltips
+	if(sizeof($notooltip) == 0) { return ""; }
 
 	// Get total number of kanji without a tooltip and merge kanji and number of occurences to items of a new array
 	$notooltipkeyvalue = array();
