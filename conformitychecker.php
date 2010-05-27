@@ -1,32 +1,43 @@
+// Prepends a note to the content if there are kanji without tooltips
 function conformitychecker($string){
 	$s = findkanjiwithouttooltip($string);
-	return $string if(empty($s));
-	return '<div class="note">' . $s . '</div>' . $string;
+	if(empty($s)){ return $string; }
+	return "<div class=\"note\">" . $s . "</div>\n" . $string;
 }
 
+// Returns a string explaining what kanji don't have tooltips
 function findkanjiwithouttooltip($string){
 //	Ranges: hira 3040-309F   kata 30A0-30FF   kanji 4E00-9FC2
 
-//	Total kanji or kanji compounds
-	preg_match_all("/([\x{4E00}-\x{9FC2}]+)/u", $string, $total);
+//	Get all kanji
+	preg_match_all("/([\x{4E00}-\x{9FC2}])/u", $string, $tk);
 
-//	Kanji or kanji compounds inside a tooltip tag
-	preg_match_all("/\\\\tt\[.*([\x{4E00}-\x{9FC2}]+).*\]/uU", $string, $withtooltip);
+//	Add all kanji to hash with counter
+	foreach($tk[1] as $k){ $totalkanji[$k] += 1; }
 
-//	Add all kanji to hash
-	foreach($total[1] as $k){ $withouttooltip[$k] = 1; }
+//	Get all kanji that are inside tooltip tags
+	preg_match_all("/\\\\tt\[(.*[\x{4E00}-\x{9FC2}].*)\]/uU", $string, $ttw); // first get all words inside tooltips
+	preg_match_all("/([\x{4E00}-\x{9FC2}])/u", join($ttw[1]), $ttk); // then get all kanji in those words
 
-//	Remove those with tooltips
-	foreach($withtooltip[1] as $k){ unset($withouttooltip[$k]); }
+//	Add all tooltip kanji to hash with counter
+	foreach($ttk[1] as $k){ $tooltipkanji[$k] += 1; }
 
-	$count = sizeof($withouttooltip);
+//	Compare the counts and make a hash of kanji with no tooltip
+	foreach($totalkanji as $k => $v){
+		$count = $v - $tooltipkanji[$k];
+		if($count > 0) $notooltip[$k] = $count;
+	}
 
-//	Return if there are none without tooltips
-	if($count == 0) return "";
+	// Get total number of kanji without a tooltip and merge kanji and number of occurences to items of a new array
+	$notooltipkeyvalue = array();
+	foreach($notooltip as $k => $v){
+		$c += $v;
+		array_push($notooltipkeyvalue, $k . ($v > 1 ? ' (' . $v . ')' : ''));
+	}
 
 //	Create info string
-	$s = "There are " . $count . " kanji or kanji compounds without a tooltip: ";
-	$s .= join(array_keys($withouttooltip), ', ');
+	$s = "There " . ($c == 1 ? 'is ' : 'are ') . $c . " kanji without a tooltip: ";
+	$s .= join($notooltipkeyvalue, ', ');
 
 	return $s;
 }
