@@ -25,10 +25,10 @@ function findkanjiwithouttooltip($string){
 	if($count == 0) return "";
 
 //	Create info string
-	$string = "There are " . $count . " kanji or kanji compounds without a tooltip: ";
-	$string .= join(array_keys($withouttooltip), ', ');
+	$s = "There are " . $count . " kanji or kanji compounds without a tooltip: ";
+	$s .= join(array_keys($withouttooltip), ', ');
 
-	return $string;
+	return $s;
 }
 
 $e = &$modx->Event;
