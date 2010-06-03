@@ -1,3 +1,5 @@
+namespace Conformitychecker_plugin;
+
 // Prepends a note to the content if there are kanji without tooltips
 function conformitychecker($string){
 	$s = findkanjiwithouttooltip($string);
